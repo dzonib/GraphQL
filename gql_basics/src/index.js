@@ -88,7 +88,9 @@ const typeDefs = `
     }
 
     type Mutation {
-        createUser(id: ID, name: String!, email: String!, age: Int): User!
+        createUser(name: String!, email: String!, age: Int): User!
+        createPost(title: String!, body: String!, published: Boolean!, author: ID!): Post!
+        createComment(textFields: String!, author: ID!, postId: ID!): Comment!
     }
 
     type User {
@@ -161,8 +163,6 @@ const resolvers = {
 
             const emailTaken = users.some(user => user.email === args.email)
 
-
-
             // const emailTaken = users.filter( ({email}) => args.email == email);
             // console.log(checkUser)
 
@@ -184,6 +184,50 @@ const resolvers = {
             // users = [newUser, ...users]
             
             return newUser
+        },
+        createPost(parent, args, ctx, info) {
+            const userExists = users.some(user => user.id === args.author)
+
+            if (userExists) {
+                throw new Error('User not found')
+            }
+
+            const newPost = {
+                id: uuid(),
+                title: args.title,
+                body: args.body,
+                published: args.published,
+                author: args.author
+            }
+
+            posts.unshift(newPost)
+
+            return newPost
+        },
+        createComment(parent, args, ctx, info) {
+
+            const authorExists = users.some(user => user.id == args.author)
+
+            if (!authorExists) {
+                throw new Error('User does not exist')
+            }
+
+            const postExists = posts.some(post => post.id == args.postId && post.published)
+
+            if (!postExists) {
+                throw new Error('Post does not exist')
+            }
+
+            const newComment = {
+                id: uuid(),
+                textFields: args.textFields,
+                author: args.author,
+                postId: args.postId
+            }
+
+            comments.unshift(newComment)
+
+            return newComment
         }
     },
     Post: {
