@@ -29,30 +29,61 @@ const posts = [
     {
         id: 1,
         title: 'compliment',
-        body: 'WHAT UP BJACH',
-        published: true
+        body: 'WHAT UP bruuuh',
+        published: true,
+        author: 1
     },
     {
         id: 2,
-        title: 'stupid',
+        title: 'god',
         body: 'YOU ARE KING KONG',
-        published: false
+        published: false,
+        author: 1
     },
     {
         id: 3,
         title: 'what up',
         body: 'heeejaaaaa',
-        published: true
+        published: true,
+        author: 3
+    },
+]
+
+const comments = [
+    {
+        id: 1,
+        textFields: 'blablabla',
+        author: 1,
+        postId: 1
+    },
+    {
+        id: 2,
+        textFields: 'Hellooo',
+        author: 2,
+        postId: 1
+    },
+    {
+        id: 3,
+        textFields: 'Goodbyeee',
+        author: 2,
+        postId: 3
+    },
+    {
+        id: 4,
+        textFields: 'helogoodbyehellogoodbye',
+        author: 1,
+        postId: 1
     },
 ]
 
 // Type definitions (schema)
 const typeDefs = `
     type Query {
-        posts(query: String): [Post]!
+        posts(query: String): [Post!]!
         users(query: String): [User!]!
         me: User!
         post: Post!
+        comments: [Comment!]!
     }
 
     type User {
@@ -60,6 +91,8 @@ const typeDefs = `
         name: String!
         email: String!
         age: Int
+        posts: [Post!]!
+        comments: [Comment!]!
     }
 
     type Post {
@@ -67,6 +100,15 @@ const typeDefs = `
         title: String!
         body: String!
         published: Boolean!
+        author: User!
+        comments: [Comment!]!
+    }
+
+    type Comment {
+        id: ID!
+        textFields: String!
+        author: User!
+        post: Post!
     }
 `
 
@@ -103,6 +145,33 @@ const resolvers = {
             }
 
             return posts
+        },
+        comments() {
+            return comments
+        }
+    },
+    Post: {
+        author(parent, args, ctx, info) {
+            return users.find((user) => parent.author == user.id)
+        },
+        comments(parent, args, ctx, info) {
+            return comments.filter(({postId}) => postId == parent.id)
+        }
+    },
+    User: {
+        posts(parent, args, ctx, info) {
+            return posts.filter(({author}) => parent.id == author)
+        },
+        comments(parent, args, ctx, info) {
+            return comments.filter(({author}) => author === parent.id)
+        }
+    },
+    Comment: {
+        author(parent, args, ctx, info) {
+            return users.find((user) => user.id == parent.author)
+        },
+        post(parent, args, ctx, info) {
+            return posts.find(({id}) => parent.postId == id)
         }
     }
 }
