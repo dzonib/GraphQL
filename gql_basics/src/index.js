@@ -1,4 +1,5 @@
 import { GraphQLServer } from 'graphql-yoga'
+import uuid from 'uuid/v4'
 
 
 //Scalar types (type that stores single value) - String, Boolean, Int, Float, ID
@@ -86,6 +87,10 @@ const typeDefs = `
         comments: [Comment!]!
     }
 
+    type Mutation {
+        createUser(id: ID, name: String!, email: String!, age: Int): User!
+    }
+
     type User {
         id: ID!
         name: String!
@@ -114,6 +119,7 @@ const typeDefs = `
 
 // Resolvers
 const resolvers = {
+   
     Query: {
         users(parent, args, ctx, info) {
             if (args.query) {
@@ -126,7 +132,7 @@ const resolvers = {
                 id: 1,
                 name: 'elvis',
                 email: 'kingkong@blah.com',
-                age: 3213123
+                age: 32
             }
         },
         post() {
@@ -148,6 +154,36 @@ const resolvers = {
         },
         comments() {
             return comments
+        }
+    },
+    Mutation: {
+        createUser(parent, args, ctx, info) {
+
+            const emailTaken = users.some(user => user.email === args.email)
+
+
+
+            // const emailTaken = users.filter( ({email}) => args.email == email);
+            // console.log(checkUser)
+
+            if (emailTaken) {
+                throw new Error('User already exist')
+            }
+
+            const newUser = {
+                id: uuid(),
+                name: args.name,
+                email: args.email,
+                age: args.age
+            }
+
+
+            users.unshift(newUser)
+
+            // set users to let
+            // users = [newUser, ...users]
+            
+            return newUser
         }
     },
     Post: {
