@@ -88,9 +88,28 @@ const typeDefs = `
     }
 
     type Mutation {
-        createUser(name: String!, email: String!, age: Int): User!
-        createPost(title: String!, body: String!, published: Boolean!, author: ID!): Post!
-        createComment(textFields: String!, author: ID!, postId: ID!): Comment!
+        createUser(data: CreateUserInput!): User!
+        createPost(data: CreatePostInput!): Post!
+        createComment(data: CreateCommentInput!): Comment!
+    }
+
+    input CreateUserInput {
+        name: String!
+        email: String!
+        age: Int
+    }
+
+    input CreatePostInput {
+        title: String!
+        body: String!
+        published: Boolean!
+        author: ID!
+    }
+
+    input CreateCommentInput {
+        textFields: String!,
+        author: ID!,
+        postId: ID!
     }
 
     type User {
@@ -161,7 +180,7 @@ const resolvers = {
     Mutation: {
         createUser(parent, args, ctx, info) {
 
-            const emailTaken = users.some(user => user.email === args.email)
+            const emailTaken = users.some(user => user.email === args.data.email)
 
             // const emailTaken = users.filter( ({email}) => args.email == email);
             // console.log(checkUser)
@@ -172,11 +191,8 @@ const resolvers = {
 
             const newUser = {
                 id: uuid(),
-                name: args.name,
-                email: args.email,
-                age: args.age
+                ...args.data
             }
-
 
             users.unshift(newUser)
 
@@ -186,7 +202,7 @@ const resolvers = {
             return newUser
         },
         createPost(parent, args, ctx, info) {
-            const userExists = users.some(user => user.id === args.author)
+            const userExists = users.some(user => user.id === args.data.author)
 
             if (userExists) {
                 throw new Error('User not found')
@@ -194,10 +210,7 @@ const resolvers = {
 
             const newPost = {
                 id: uuid(),
-                title: args.title,
-                body: args.body,
-                published: args.published,
-                author: args.author
+               ...args.data
             }
 
             posts.unshift(newPost)
@@ -206,13 +219,13 @@ const resolvers = {
         },
         createComment(parent, args, ctx, info) {
 
-            const authorExists = users.some(user => user.id == args.author)
+            const authorExists = users.some(user => user.id == args.data.author)
 
             if (!authorExists) {
                 throw new Error('User does not exist')
             }
 
-            const postExists = posts.some(post => post.id == args.postId && post.published)
+            const postExists = posts.some(post => post.id == args.data.postId && post.published)
 
             if (!postExists) {
                 throw new Error('Post does not exist')
@@ -220,9 +233,7 @@ const resolvers = {
 
             const newComment = {
                 id: uuid(),
-                textFields: args.textFields,
-                author: args.author,
-                postId: args.postId
+                ...args.data
             }
 
             comments.unshift(newComment)
