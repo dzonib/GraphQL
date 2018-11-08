@@ -1,7 +1,7 @@
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 
-import getUserid from '../utils/getUserId'
+import getUserId from '../utils/getUserId'
 
 
 const Mutation = {
@@ -41,22 +41,41 @@ const Mutation = {
             token: jwt.sign({userId: user.id}, 'zupa')
         }
     },
-	async deleteUser(parent, args, { prisma }, info) {
-	
-		return prisma.mutation.deleteUser({ where: { id: args.id } }, info)
-	},
-	async updateUser(parent, args, { prisma }, info) {
+	async deleteUser(parent, args, { prisma, request }, info) {
 
-		return prisma.mutation.updateUser({ data: args.data, where: { id: args.id } }, info)
+        const userId = getUserId(request)	
+
+		return prisma.mutation.deleteUser({ where: { id: userId } }, info)
+	},
+	async updateUser(parent, args, { prisma, request }, info) {
+        const userId = getUserId(request)
+
+		return prisma.mutation.updateUser({ 
+            data: args.data, where: { id: userId } 
+        
+        }, info)
 
 	},
 	async createPost(parent, args, { prisma, request }, info) {
-        const userId = getUserid(request)
+        const userId = getUserId(request)
 
 		return prisma.mutation.createPost({data: {...args.data, author: {connect: { id: userId}}}}, info)
 
 	},
-	deletePost(parent, args, { prisma }, info) {
+	async deletePost(parent, args, { prisma, request }, info) {
+
+        const userId = getUserId(request)
+
+        const postExists = await prisma.exists.Post({
+            id: args.id,
+            author: {
+                id: userId
+            }
+        })
+
+        if (!postExists) {
+            throw new Error('Unable to delete post')
+        }
 
 		return prisma.mutation.deletePost({where: {id: args.id}}, info)
 		
