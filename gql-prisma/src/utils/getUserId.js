@@ -11,7 +11,6 @@ const getUserId = (request) => {
 
     const decoded = jwt.decode(token, 'zupa')
 
-    console.log(decoded)
 
     return decoded.userId
 }
