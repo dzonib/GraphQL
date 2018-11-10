@@ -1,9 +1,11 @@
 type Query {
     users(query: String): [User!]!
+    # query arg is serch string (optional)
     posts(query: String): [Post!]!
+    post(id: ID!): Post!
+    myPosts(query: String): [Post!]!
     comments: [Comment!]!
     me: User!
-    post: Post!
 }
 
 type Mutation {
